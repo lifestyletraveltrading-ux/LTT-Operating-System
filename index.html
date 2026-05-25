@@ -1,55 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LTT OS v7.1 LIVE</title>
+  <title>LTT OS v7.2</title>
 
   <style>
     body { font-family: Arial; background:#0f172a; color:#e2e8f0; margin:0; }
-    .header { padding:20px; background:#020617; }
-    h1 { margin:0; }
 
-    .section { padding:20px; border-bottom:1px solid #1e293b; }
+    /* NAVBAR */
+    .nav {
+      display:flex;
+      background:#020617;
+      padding:15px;
+    }
 
+    .nav button {
+      background:none;
+      border:none;
+      color:white;
+      margin-right:20px;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    .nav button:hover {
+      color:#38bdf8;
+    }
+
+    /* SECTIONS */
+    .section {
+      display:none;
+      padding:20px;
+    }
+
+    .active {
+      display:block;
+    }
+
+    /* CARDS */
+    .card {
+      background:#1e293b;
+      padding:12px;
+      margin:10px 0;
+      border-radius:8px;
+    }
+
+    /* KPI */
     .grid {
       display:grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4,1fr);
       gap:10px;
     }
 
     .kpi {
       background:#1e293b;
       padding:15px;
-      border-radius:8px;
       text-align:center;
-    }
-
-    .card {
-      background:#1e293b;
-      padding:12px;
-      margin:8px 0;
       border-radius:8px;
     }
 
+    /* COLORS */
     .red { background:#7f1d1d; }
     .yellow { background:#854d0e; }
     .blue { background:#1e40af; }
     .green { background:#14532d; }
-    .grey { background:#374151; }
+
   </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h1>🚀 LTT OPERATING SYSTEM (LIVE)</h1>
+<!-- NAVIGATION -->
+<div class="nav">
+  <button onclick="show('dashboard')">Dashboard</button>
+  <button onclick="show('critical')">Critical Path</button>
+  <button onclick="show('parallel')">Parallel</button>
+  <button onclick="show('blockers')">Blockers</button>
 </div>
 
-<div class="section">
+<!-- DASHBOARD -->
+<div id="dashboard" class="section active">
+
   <h2>🎯 CEO CONTROL PANEL</h2>
   <div id="control"></div>
-</div>
 
-<div class="section">
   <h2>📊 SYSTEM STATUS</h2>
   <div class="grid">
     <div class="kpi" id="inprogress"></div>
@@ -57,53 +90,65 @@
     <div class="kpi" id="ready"></div>
     <div class="kpi" id="complete"></div>
   </div>
+
 </div>
 
-<div class="section">
-  <h2>🔴 CRITICAL PATH</h2>
-  <div id="critical"></div>
+<!-- CRITICAL -->
+<div id="critical" class="section">
+  <h2>🔴 Critical Path</h2>
+  <div id="critical-data"></div>
 </div>
 
-<div class="section">
-  <h2>🟢 PARALLEL TASKS</h2>
-  <div id="parallel"></div>
+<!-- PARALLEL -->
+<div id="parallel" class="section">
+  <h2>🟢 Parallel Tasks</h2>
+  <div id="parallel-data"></div>
 </div>
 
-<div class="section">
-  <h2>🚫 BLOCKERS</h2>
-  <div id="blockers"></div>
+<!-- BLOCKERS -->
+<div id="blockers" class="section">
+  <h2>🚫 Blockers</h2>
+  <div id="blockers-data"></div>
 </div>
 
 <script>
 
-// URLs
+// NAVIGATION
+function show(section){
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(section).classList.add('active');
+}
+
+// URLS
 const CONTROL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=0&single=true&output=csv";
 const CRITICAL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1454054399&single=true&output=csv";
 const PARALLEL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=593954810&single=true&output=csv";
 const BLOCKERS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1814838649&single=true&output=csv";
 
-// Traffic light logic
+// STATUS COLOUR
 function statusClass(status){
+  if(!status) return "card";
+
   status = status.toLowerCase();
 
-  if(status.includes("blocked")) return "red";
-  if(status.includes("hold")) return "yellow";
-  if(status.includes("progress")) return "blue";
-  if(status.includes("complete")) return "green";
-  return "grey";
+  if(status.includes("blocked")) return "card red";
+  if(status.includes("hold")) return "card yellow";
+  if(status.includes("progress")) return "card blue";
+  if(status.includes("complete")) return "card green";
+
+  return "card";
 }
 
-// Load tables
-function loadTasks(url, container, countStats = false){
+// LOAD DATA
+function load(url, element, count=false){
   fetch(url)
     .then(res => res.text())
     .then(data => {
 
       let rows = data.split("\n").map(r => r.split(","));
-
       let html = "";
 
-      let stats = {progress:0, blocked:0, ready:0, complete:0};
+      let stats = {p:0,b:0,r:0,c:0};
 
       for(let i=1;i<rows.length;i++){
         let task = rows[i][0];
@@ -112,40 +157,40 @@ function loadTasks(url, container, countStats = false){
 
         if(!task) continue;
 
-        html += `<div class="card ${statusClass(status)}">
+        html += `<div class="${statusClass(status)}">
           <b>${task}</b><br>
-          Owner: ${owner}<br>
-          Status: ${status}
+          ${owner}<br>
+          ${status}
         </div>`;
 
-        if(countStats){
-          if(status.includes("Progress")) stats.progress++;
-          else if(status.includes("Blocked")) stats.blocked++;
-          else if(status.includes("Complete")) stats.complete++;
-          else stats.ready++;
+        if(count){
+          if(status.includes("Progress")) stats.p++;
+          else if(status.includes("Blocked")) stats.b++;
+          else if(status.includes("Complete")) stats.c++;
+          else stats.r++;
         }
       }
 
-      document.getElementById(container).innerHTML = html;
+      document.getElementById(element).innerHTML = html;
 
-      if(countStats){
-        document.getElementById("inprogress").innerHTML = stats.progress + "<br>IN PROGRESS";
-        document.getElementById("blocked").innerHTML = stats.blocked + "<br>BLOCKED";
-        document.getElementById("ready").innerHTML = stats.ready + "<br>READY";
-        document.getElementById("complete").innerHTML = stats.complete + "<br>COMPLETE";
+      if(count){
+        document.getElementById("inprogress").innerHTML = stats.p + "<br>IN PROGRESS";
+        document.getElementById("blocked").innerHTML = stats.b + "<br>BLOCKED";
+        document.getElementById("ready").innerHTML = stats.r + "<br>READY";
+        document.getElementById("complete").innerHTML = stats.c + "<br>COMPLETE";
       }
 
     });
 }
 
-// Load control panel
+// LOAD CONTROL PANEL
 function loadControl(){
   fetch(CONTROL)
     .then(res => res.text())
     .then(data => {
       let rows = data.split("\n").map(r => r.split(","));
-
       let html = "";
+
       for(let i=1;i<rows.length;i++){
         html += `<p><b>${rows[i][0]}</b>: ${rows[i][1]}</p>`;
       }
@@ -154,11 +199,11 @@ function loadControl(){
     });
 }
 
-// Run system
+// RUN
 loadControl();
-loadTasks(CRITICAL, "critical", true);
-loadTasks(PARALLEL, "parallel");
-loadTasks(BLOCKERS, "blockers");
+load(CRITICAL,"critical-data",true);
+load(PARALLEL,"parallel-data");
+load(BLOCKERS,"blockers-data");
 
 </script>
 
