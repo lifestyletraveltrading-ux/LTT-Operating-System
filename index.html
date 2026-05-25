@@ -4,6 +4,7 @@
   <title>LTT Operating System</title>
 
   <style>
+
     body {
       margin:0;
       font-family: Arial;
@@ -19,10 +20,7 @@
       justify-content:space-between;
     }
 
-    .logo {
-      font-weight:600;
-      color:#2f5d62;
-    }
+    .logo { color:#2f5d62; font-weight:bold; font-size:18px; }
 
     .nav {
       background:#2f5d62;
@@ -35,7 +33,6 @@
       color:white;
       margin-right:20px;
       cursor:pointer;
-      font-size:15px;
     }
 
     .section {
@@ -47,29 +44,31 @@
       display:block;
     }
 
+    /* CARDS */
     .card {
-      background:white;
       padding:15px;
       margin-bottom:15px;
       border-radius:10px;
       box-shadow:0 2px 6px rgba(0,0,0,0.05);
     }
 
+    /* STRONG TRAFFIC LIGHTS */
+    .red { background:#fee2e2; border:2px solid #ef4444; }
+    .yellow { background:#fef3c7; border:2px solid #f59e0b; }
+    .blue { background:#dbeafe; border:2px solid #3b82f6; }
+    .green { background:#dcfce7; border:2px solid #10b981; }
+    .grey { background:white; }
+
+    /* KPI */
     .grid {
       display:grid;
       grid-template-columns: repeat(4,1fr);
       gap:15px;
+      margin-top:15px;
     }
 
     .kpi {
       background:white;
       padding:20px;
-      text-align:center;
       border-radius:10px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.05);
-    }
-
-    /* TRAFFIC LIGHT COLORS */
-    .red { background:#fee2e2; border-left:6px solid #ef4444; }
-    .yellow { background:#fef3c7; border-left:6px solid #f59e0b; }
-    .blue { background:#dbeafe; border-left:6px solid #3b82f6; }
+      text-align:center;
