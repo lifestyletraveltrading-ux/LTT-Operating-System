@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LTT OS v7.1 LIVE</title>
+
+  <style>
+    body { font-family: Arial; background:#0f172a; color:#e2e8f0; margin:0; }
+    .header { padding:20px; background:#020617; }
+    h1 { margin:0; }
+
+    .section { padding:20px; border-bottom:1px solid #1e293b; }
+
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+    }
+
+    .kpi {
+      background:#1e293b;
+      padding:15px;
+      border-radius:8px;
+      text-align:center;
+    }
+
+    .card {
+      background:#1e293b;
+      padding:12px;
+      margin:8px 0;
+      border-radius:8px;
+    }
+
+    .red { background:#7f1d1d; }
+    .yellow { background:#854d0e; }
+    .blue { background:#1e40af; }
+    .green { background:#14532d; }
+    .grey { background:#374151; }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>🚀 LTT OPERATING SYSTEM (LIVE)</h1>
+</div>
+
+<div class="section">
+  <h2>🎯 CEO CONTROL PANEL</h2>
+  <div id="control"></div>
+</div>
+
+<div class="section">
+  <h2>📊 SYSTEM STATUS</h2>
+  <div class="grid">
+    <div class="kpi" id="inprogress"></div>
+    <div class="kpi" id="blocked"></div>
+    <div class="kpi" id="ready"></div>
+    <div class="kpi" id="complete"></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>🔴 CRITICAL PATH</h2>
+  <div id="critical"></div>
+</div>
+
+<div class="section">
+  <h2>🟢 PARALLEL TASKS</h2>
+  <div id="parallel"></div>
+</div>
+
+<div class="section">
+  <h2>🚫 BLOCKERS</h2>
+  <div id="blockers"></div>
+</div>
+
+<script>
+
+// URLs
+const CONTROL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=0&single=true&output=csv";
+const CRITICAL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1454054399&single=true&output=csv";
+const PARALLEL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=593954810&single=true&output=csv";
+const BLOCKERS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1814838649&single=true&output=csv";
+
+// Traffic light logic
+function statusClass(status){
+  status = status.toLowerCase();
+
+  if(status.includes("blocked")) return "red";
+  if(status.includes("hold")) return "yellow";
+  if(status.includes("progress")) return "blue";
+  if(status.includes("complete")) return "green";
+  return "grey";
+}
+
+// Load tables
+function loadTasks(url, container, countStats = false){
+  fetch(url)
+    .then(res => res.text())
+    .then(data => {
+
+      let rows = data.split("\n").map(r => r.split(","));
+
+      let html = "";
+
+      let stats = {progress:0, blocked:0, ready:0, complete:0};
+
+      for(let i=1;i<rows.length;i++){
+        let task = rows[i][0];
+        let owner = rows[i][1];
+        let status = rows[i][2];
+
+        if(!task) continue;
+
+        html += `<div class="card ${statusClass(status)}">
+          <b>${task}</b><br>
+          Owner: ${owner}<br>
+          Status: ${status}
+        </div>`;
+
+        if(countStats){
+          if(status.includes("Progress")) stats.progress++;
+          else if(status.includes("Blocked")) stats.blocked++;
+          else if(status.includes("Complete")) stats.complete++;
+          else stats.ready++;
+        }
+      }
+
+      document.getElementById(container).innerHTML = html;
+
+      if(countStats){
+        document.getElementById("inprogress").innerHTML = stats.progress + "<br>IN PROGRESS";
+        document.getElementById("blocked").innerHTML = stats.blocked + "<br>BLOCKED";
+        document.getElementById("ready").innerHTML = stats.ready + "<br>READY";
+        document.getElementById("complete").innerHTML = stats.complete + "<br>COMPLETE";
+      }
+
+    });
+}
+
+// Load control panel
+function loadControl(){
+  fetch(CONTROL)
+    .then(res => res.text())
+    .then(data => {
+      let rows = data.split("\n").map(r => r.split(","));
+
+      let html = "";
+      for(let i=1;i<rows.length;i++){
+        html += `<p><b>${rows[i][0]}</b>: ${rows[i][1]}</p>`;
+      }
+
+      document.getElementById("control").innerHTML = html;
+    });
+}
+
+// Run system
+loadControl();
+loadTasks(CRITICAL, "critical", true);
+loadTasks(PARALLEL, "parallel");
+loadTasks(BLOCKERS, "blockers");
+
+</script>
+
+</body>
+</html>
