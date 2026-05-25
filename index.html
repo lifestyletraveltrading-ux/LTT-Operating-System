@@ -11,7 +11,6 @@
       color:#1f2933;
     }
 
-    /* HEADER */
     .header {
       background:white;
       padding:15px 30px;
@@ -22,11 +21,9 @@
 
     .logo {
       font-weight:600;
-      font-size:18px;
       color:#2f5d62;
     }
 
-    /* NAV */
     .nav {
       background:#2f5d62;
       padding:10px 30px;
@@ -38,9 +35,9 @@
       color:white;
       margin-right:20px;
       cursor:pointer;
+      font-size:15px;
     }
 
-    /* SECTIONS */
     .section {
       display:none;
       padding:30px;
@@ -50,7 +47,6 @@
       display:block;
     }
 
-    /* CARDS */
     .card {
       background:white;
       padding:15px;
@@ -59,7 +55,6 @@
       box-shadow:0 2px 6px rgba(0,0,0,0.05);
     }
 
-    /* KPI */
     .grid {
       display:grid;
       grid-template-columns: repeat(4,1fr);
@@ -74,158 +69,7 @@
       box-shadow:0 2px 6px rgba(0,0,0,0.05);
     }
 
-    /* STATUS COLORS */
-    .red { border-left:5px solid #ef4444; }
-    .yellow { border-left:5px solid #f59e0b; }
-    .blue { border-left:5px solid #3b82f6; }
-    .green { border-left:5px solid #10b981; }
-
-  </style>
-</head>
-
-<body>
-
-<div class="header">
-  <div class="logo">LTT Control Panel</div>
-  <div>Operating System</div>
-</div>
-
-<div class="nav">
-  <button onclick="show('dashboard')">Dashboard</button>
-  <button onclick="show('critical')">Critical Path</button>
-  <button onclick="show('parallel')">Parallel</button>
-  <button onclick="show('blockers')">Blockers</button>
-</div>
-
-<!-- DASHBOARD -->
-<div id="dashboard" class="section active">
-  <h2>CEO Control Panel</h2>
-  <div id="control"></div>
-
-  <h2>System Status</h2>
-  <div class="grid">
-    <div class="kpi" id="inprogress"></div>
-    <div class="kpi" id="blocked"></div>
-    <div class="kpi" id="ready"></div>
-    <div class="kpi" id="complete"></div>
-  </div>
-</div>
-
-<!-- CRITICAL -->
-<div id="critical" class="section">
-  <h2>Critical Path</h2>
-  <div id="critical-data"></div>
-</div>
-
-<!-- PARALLEL -->
-<div id="parallel" class="section">
-  <h2>Parallel Tasks</h2>
-  <div id="parallel-data"></div>
-</div>
-
-<!-- BLOCKERS -->
-<div id="blockers" class="section">
-  <h2>Blockers</h2>
-  <div id="blockers-data"></div>
-</div>
-
-<script>
-
-// NAVIGATION
-function show(section){
-  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-  document.getElementById(section).classList.add("active");
-}
-
-// URLs
-const CONTROL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=0&single=true&output=csv";
-const CRITICAL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1454054399&single=true&output=csv";
-const PARALLEL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=593954810&single=true&output=csv";
-const BLOCKERS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1814838649&single=true&output=csv";
-
-// CLEAN CSV
-function cleanCSV(data){
-  return data.trim().split("\n").map(row =>
-    row.split(",").map(cell => cell.replace(/"/g,"").trim())
-  );
-}
-
-// STATUS COLOR
-function statusClass(status){
-  status = status?.toLowerCase() || "";
-  if(status.includes("blocked")) return "card red";
-  if(status.includes("hold")) return "card yellow";
-  if(status.includes("progress")) return "card blue";
-  if(status.includes("complete")) return "card green";
-  return "card";
-}
-
-// LOAD TASKS
-function load(url, element, stats=false){
-  fetch(url)
-    .then(r=>r.text())
-    .then(data=>{
-
-      let rows = cleanCSV(data);
-      let html="";
-      let s={p:0,b:0,r:0,c:0};
-
-      for(let i=1;i<rows.length;i++){
-        let [task, owner, status] = rows[i];
-        if(!task) continue;
-
-        html += `
-          <div class="${statusClass(status)}">
-            <b>${task}</b><br>
-            Owner: ${owner}<br>
-            Status: ${status}
-          </div>`;
-
-        if(stats){
-          if(status.includes("Progress")) s.p++;
-          else if(status.includes("Blocked")) s.b++;
-          else if(status.includes("Complete")) s.c++;
-          else s.r++;
-        }
-      }
-
-      document.getElementById(element).innerHTML = html;
-
-      if(stats){
-        inprogress.innerHTML = s.p + "<br>In Progress";
-        blocked.innerHTML = s.b + "<br>Blocked";
-        ready.innerHTML = s.r + "<br>Ready";
-        complete.innerHTML = s.c + "<br>Complete";
-      }
-
-    });
-}
-
-// LOAD CONTROL PANEL
-function loadControl(){
-  fetch(CONTROL)
-    .then(r=>r.text())
-    .then(data=>{
-      let rows = cleanCSV(data);
-      let html="";
-      for(let i=1;i<rows.length;i++){
-        let [field, value] = rows[i];
-        if(!field) continue;
-
-        html += `<div class="card"><b>${field}</b>: ${value}</div>`;
-      }
-      control.innerHTML = html;
-    });
-}
-
-// RUN
-loadControl();
-load(CRITICAL,"critical-data",true);
-load(PARALLEL,"parallel-data");
-load(BLOCKERS,"blockers-data");
-
-</script>
-
-</body>
-</html>
-``
+    /* TRAFFIC LIGHT COLORS */
+    .red { background:#fee2e2; border-left:6px solid #ef4444; }
+    .yellow { background:#fef3c7; border-left:6px solid #f59e0b; }
+    .blue { background:#dbeafe; border-left:6px solid #3b82f6; }
