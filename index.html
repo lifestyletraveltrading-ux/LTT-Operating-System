@@ -1,16 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LTT OS v7.2</title>
+  <title>LTT Operating System</title>
 
   <style>
-    body { font-family: Arial; background:#0f172a; color:#e2e8f0; margin:0; }
+    body {
+      margin:0;
+      font-family: Arial;
+      background:#f5f7f8;
+      color:#1f2933;
+    }
 
-    /* NAVBAR */
-    .nav {
+    /* HEADER */
+    .header {
+      background:white;
+      padding:15px 30px;
+      border-bottom:1px solid #e5e7eb;
       display:flex;
-      background:#020617;
-      padding:15px;
+      justify-content:space-between;
+    }
+
+    .logo {
+      font-weight:600;
+      font-size:18px;
+      color:#2f5d62;
+    }
+
+    /* NAV */
+    .nav {
+      background:#2f5d62;
+      padding:10px 30px;
     }
 
     .nav button {
@@ -18,18 +37,13 @@
       border:none;
       color:white;
       margin-right:20px;
-      font-size:16px;
       cursor:pointer;
-    }
-
-    .nav button:hover {
-      color:#38bdf8;
     }
 
     /* SECTIONS */
     .section {
       display:none;
-      padding:20px;
+      padding:30px;
     }
 
     .active {
@@ -38,38 +52,44 @@
 
     /* CARDS */
     .card {
-      background:#1e293b;
-      padding:12px;
-      margin:10px 0;
-      border-radius:8px;
+      background:white;
+      padding:15px;
+      margin-bottom:15px;
+      border-radius:10px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
     }
 
     /* KPI */
     .grid {
       display:grid;
       grid-template-columns: repeat(4,1fr);
-      gap:10px;
+      gap:15px;
     }
 
     .kpi {
-      background:#1e293b;
-      padding:15px;
+      background:white;
+      padding:20px;
       text-align:center;
-      border-radius:8px;
+      border-radius:10px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
     }
 
-    /* COLORS */
-    .red { background:#7f1d1d; }
-    .yellow { background:#854d0e; }
-    .blue { background:#1e40af; }
-    .green { background:#14532d; }
+    /* STATUS COLORS */
+    .red { border-left:5px solid #ef4444; }
+    .yellow { border-left:5px solid #f59e0b; }
+    .blue { border-left:5px solid #3b82f6; }
+    .green { border-left:5px solid #10b981; }
 
   </style>
 </head>
 
 <body>
 
-<!-- NAVIGATION -->
+<div class="header">
+  <div class="logo">LTT Control Panel</div>
+  <div>Operating System</div>
+</div>
+
 <div class="nav">
   <button onclick="show('dashboard')">Dashboard</button>
   <button onclick="show('critical')">Critical Path</button>
@@ -79,35 +99,33 @@
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="section active">
-
-  <h2>🎯 CEO CONTROL PANEL</h2>
+  <h2>CEO Control Panel</h2>
   <div id="control"></div>
 
-  <h2>📊 SYSTEM STATUS</h2>
+  <h2>System Status</h2>
   <div class="grid">
     <div class="kpi" id="inprogress"></div>
     <div class="kpi" id="blocked"></div>
     <div class="kpi" id="ready"></div>
     <div class="kpi" id="complete"></div>
   </div>
-
 </div>
 
 <!-- CRITICAL -->
 <div id="critical" class="section">
-  <h2>🔴 Critical Path</h2>
+  <h2>Critical Path</h2>
   <div id="critical-data"></div>
 </div>
 
 <!-- PARALLEL -->
 <div id="parallel" class="section">
-  <h2>🟢 Parallel Tasks</h2>
+  <h2>Parallel Tasks</h2>
   <div id="parallel-data"></div>
 </div>
 
 <!-- BLOCKERS -->
 <div id="blockers" class="section">
-  <h2>🚫 Blockers</h2>
+  <h2>Blockers</h2>
   <div id="blockers-data"></div>
 </div>
 
@@ -115,69 +133,69 @@
 
 // NAVIGATION
 function show(section){
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById(section).classList.add('active');
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById(section).classList.add("active");
 }
 
-// URLS
+// URLs
 const CONTROL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=0&single=true&output=csv";
 const CRITICAL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1454054399&single=true&output=csv";
 const PARALLEL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=593954810&single=true&output=csv";
 const BLOCKERS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=1814838649&single=true&output=csv";
 
-// STATUS COLOUR
+// CLEAN CSV
+function cleanCSV(data){
+  return data.trim().split("\n").map(row =>
+    row.split(",").map(cell => cell.replace(/"/g,"").trim())
+  );
+}
+
+// STATUS COLOR
 function statusClass(status){
-  if(!status) return "card";
-
-  status = status.toLowerCase();
-
+  status = status?.toLowerCase() || "";
   if(status.includes("blocked")) return "card red";
   if(status.includes("hold")) return "card yellow";
   if(status.includes("progress")) return "card blue";
   if(status.includes("complete")) return "card green";
-
   return "card";
 }
 
-// LOAD DATA
-function load(url, element, count=false){
+// LOAD TASKS
+function load(url, element, stats=false){
   fetch(url)
-    .then(res => res.text())
-    .then(data => {
+    .then(r=>r.text())
+    .then(data=>{
 
-      let rows = data.split("\n").map(r => r.split(","));
-      let html = "";
-
-      let stats = {p:0,b:0,r:0,c:0};
+      let rows = cleanCSV(data);
+      let html="";
+      let s={p:0,b:0,r:0,c:0};
 
       for(let i=1;i<rows.length;i++){
-        let task = rows[i][0];
-        let owner = rows[i][1];
-        let status = rows[i][2];
-
+        let [task, owner, status] = rows[i];
         if(!task) continue;
 
-        html += `<div class="${statusClass(status)}">
-          <b>${task}</b><br>
-          ${owner}<br>
-          ${status}
-        </div>`;
+        html += `
+          <div class="${statusClass(status)}">
+            <b>${task}</b><br>
+            Owner: ${owner}<br>
+            Status: ${status}
+          </div>`;
 
-        if(count){
-          if(status.includes("Progress")) stats.p++;
-          else if(status.includes("Blocked")) stats.b++;
-          else if(status.includes("Complete")) stats.c++;
-          else stats.r++;
+        if(stats){
+          if(status.includes("Progress")) s.p++;
+          else if(status.includes("Blocked")) s.b++;
+          else if(status.includes("Complete")) s.c++;
+          else s.r++;
         }
       }
 
       document.getElementById(element).innerHTML = html;
 
-      if(count){
-        document.getElementById("inprogress").innerHTML = stats.p + "<br>IN PROGRESS";
-        document.getElementById("blocked").innerHTML = stats.b + "<br>BLOCKED";
-        document.getElementById("ready").innerHTML = stats.r + "<br>READY";
-        document.getElementById("complete").innerHTML = stats.c + "<br>COMPLETE";
+      if(stats){
+        inprogress.innerHTML = s.p + "<br>In Progress";
+        blocked.innerHTML = s.b + "<br>Blocked";
+        ready.innerHTML = s.r + "<br>Ready";
+        complete.innerHTML = s.c + "<br>Complete";
       }
 
     });
@@ -186,16 +204,17 @@ function load(url, element, count=false){
 // LOAD CONTROL PANEL
 function loadControl(){
   fetch(CONTROL)
-    .then(res => res.text())
-    .then(data => {
-      let rows = data.split("\n").map(r => r.split(","));
-      let html = "";
-
+    .then(r=>r.text())
+    .then(data=>{
+      let rows = cleanCSV(data);
+      let html="";
       for(let i=1;i<rows.length;i++){
-        html += `<p><b>${rows[i][0]}</b>: ${rows[i][1]}</p>`;
-      }
+        let [field, value] = rows[i];
+        if(!field) continue;
 
-      document.getElementById("control").innerHTML = html;
+        html += `<div class="card"><b>${field}</b>: ${value}</div>`;
+      }
+      control.innerHTML = html;
     });
 }
 
@@ -209,3 +228,4 @@ load(BLOCKERS,"blockers-data");
 
 </body>
 </html>
+``
