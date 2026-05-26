@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LTT Operating System</title>
+
+<style>
+body { font-family: Arial; margin:0; background:#f5f7f8; }
+
+.header {
+  background:#2C3A50;
+  color:white;
+  padding:20px;
+  font-size:20px;
+}
+
+.container { display:flex; }
+
+.sidebar {
+  width:220px;
+  background:#2C3A50;
+  color:white;
+  min-height:100vh;
+  padding:15px;
+}
+
+.sidebar div {
+  padding:10px;
+  cursor:pointer;
+}
+
+.sidebar div:hover { background:#34495e; }
+
+.main { flex:1; padding:25px; }
+
+.section { display:none; }
+.active { display:block; }
+
+.card {
+  background:white;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:6px;
+  border-left:5px solid #ccc;
+}
+
+.red { border-left-color:#F44336; }
+.blue { border-left-color:#2196F3; }
+.amber { border-left-color:#FF9800; }
+.green { border-left-color:#4CAF50; }
+
+select {
+  margin-top:10px;
+  padding:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+LTT OPERATING SYSTEM — LIVE (SYNC ACTIVE)
+</div>
+
+<div class="container">
+
+<div class="sidebar">
+  <div onclick="show('critical')">Critical Path</div>
+  <div onclick="show('parallel')">Parallel Tasks</div>
+  <div onclick="show('blockers')">Blockers</div>
+  <div onclick="show('decisions')">Decisions</div>
+</div>
+
+<div class="main">
+
+<div id="critical" class="section active">
+  <h2>Critical Path</h2>
+  <div id="critical-list"></div>
+</div>
+
+<div id="parallel" class="section">
+  <h2>Parallel Tasks</h2>
+  <div id="parallel-list"></div>
+</div>
+
+<div id="blockers" class="section">
+  <h2>Blockers</h2>
+  <div id="blockers-list"></div>
+</div>
+
+<div id="decisions" class="section">
+  <h2>Decisions</h2>
+  <div id="decisions-list"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// ✅ CORRECT URL (NOT ENCODED)
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdErPVicCUxObMaYa_a0S-q2nzNZ1Sd4Pzssv40FKeEoPVA6utJC7eorewozQXjcwuXL0_K83i6Izd/pub?gid=0&single=true&output=csv";
+
+const WRITE_URL = "https://script.google.com/macros/s/AKfycbwkE5EEwAp2qHfTuXEEWb_cWt0Y83YajTaag56X3_8gIDORwbKj_cYWcPol9QaMZHO_ZA/exec";
+
+function show(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function getClass(status){
+  status = (status || "").toLowerCase();
+
+  if(status.includes("block")) return "card red";
+  if(status.includes("progress")) return "card blue";
+  if(status.includes("hold")) return "card amber";
+  if(status.includes("complete")) return "card green";
+
+  return "card";
+}
+
+function sendUpdate(task, status){
+  fetch(WRITE_URL, {
+    method: "POST",
+    body: JSON.stringify({ task, status })
+  });
+}
+
+function updateStatus(task, status){
+  sendUpdate(task, status);
+}
+
+function load(){
+
+  fetch(SHEET_URL)
+    .then(r => r.text())
+    .then(data => {
+
+      let rows = data.trim().split("\n").map(r => r.split(","));
+
+      let sections = {
+        Critical:"",
+        Parallel:"",
+        Blocker:"",
+        Decision:""
+      };
+
+      rows.slice(1).forEach(r => {
+
+        if(r.length < 8) return;
+
+        let [type, task, owner, status, context, why, blocks, next] = r;
+
+        let html = `
+        <div class="${getClass(status)}">
+
+        <b>${task}</b><br>
+        Owner: ${owner}<br><br>
+
+        <b>Status:</b><br>
+        <select onchange="updateStatus('${task}', this.value)">
+          <option ${status==="Not Started"?"selected":""}>Not Started</option>
+          <option ${status==="In Progress"?"selected":""}>In Progress</option>
+          <option ${status==="On Hold"?"selected":""}>On Hold</option>
+          <option ${status==="Blocked"?"selected":""}>Blocked</option>
+          <option ${status==="Complete"?"selected":""}>Complete</option>
+        </select>
+
+        <br><br>
+
+        <b>Context:</b><br>${context}<br><br>
+        <b>Why:</b><br>${why}<br><br>
+        <b>Blocks:</b><br>${blocks}<br><br>
+        <b>Next Action:</b><br>${next}
+
+        </div>
+        `;
+
+        if(type.includes("Critical")) sections.Critical += html;
+        else if(type.includes("Parallel")) sections.Parallel += html;
+        else if(type.includes("Blocker")) sections.Blocker += html;
+        else if(type.includes("Decision")) sections.Decision += html;
+
+      });
+
+      document.getElementById("critical-list").innerHTML = sections.Critical;
+      document.getElementById("parallel-list").innerHTML = sections.Parallel;
+      document.getElementById("blockers-list").innerHTML = sections.Blocker;
+      document.getElementById("decisions-list").innerHTML = sections.Decision;
+
+    });
+
+}
+
+setInterval(load, 300000);
+load();
+
+</script>
+
+</body>
+</html>
